@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel — Desempenho Acadêmico com Matrizes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#f6f8fb; --grade:#e2e8f1; --tinta:#1b2a4a; --tinta2:#55627c; --suave:#8a94a8;
+  --mat:#2a78d6; --mat-claro:#dbe8f9; --por:#eb6834; --por-claro:#fbe3d9;
+  --ok:#23845a; --ok-claro:#dcf1e6; --erro:#c8323c; --erro-claro:#f8dfe0; --branco:#fff;
+  --mao:"Kalam","Segoe Print","Comic Sans MS",cursive;
+  --texto:"Archivo","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--texto);color:var(--tinta);background:var(--papel);
+  background-image:linear-gradient(var(--grade) 1px,transparent 1px),linear-gradient(90deg,var(--grade) 1px,transparent 1px);
+  background-size:24px 24px;font-size:16px;line-height:1.5;font-variant-numeric:tabular-nums}
+.pagina{max-width:1180px;margin:0 auto;padding:28px 24px 64px}
+header.topo{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px}
+h1{font-size:clamp(1.6rem,3.2vw,2.35rem);line-height:1.1;margin:0;font-weight:800;letter-spacing:-.01em;max-width:22ch}
+.sub{margin:.35rem 0 0;color:var(--tinta2);max-width:60ch}
+nav.atalhos{display:flex;gap:6px;flex-wrap:wrap}
+nav.atalhos a{color:var(--tinta);text-decoration:none;padding:6px 12px;border:1.5px solid var(--tinta);border-radius:999px;background:var(--branco);font-weight:500;font-size:.9rem}
+nav.atalhos a:hover,nav.atalhos a:focus-visible{background:var(--tinta);color:var(--branco)}
+section{background:var(--branco);border:1.5px solid var(--tinta);border-radius:6px;padding:22px 24px;margin-bottom:22px;box-shadow:4px 4px 0 var(--tinta)}
+h2{font-size:1.3rem;margin:0 0 4px;font-weight:800}
+.explica{color:var(--tinta2);margin:0 0 16px;max-width:75ch}
+.nota{font-family:var(--mao);color:var(--erro);font-size:1.05rem;line-height:1.3}
+:focus-visible{outline:3px solid var(--mat);outline-offset:2px}
+
+/* ---------- controles ---------- */
+.controles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px 28px}
+.ctrl label{display:flex;justify-content:space-between;font-weight:600;font-size:.95rem}
+.ctrl output{font-weight:800}
+input[type=range]{width:100%;accent-color:var(--tinta);margin:6px 0 0}
+.vetor{font-family:var(--mao);font-size:1.25rem;margin-top:10px}
+.botoes{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,select,input[type=search]{font:inherit;border:1.5px solid var(--tinta);border-radius:6px;background:var(--branco);color:var(--tinta);padding:7px 12px}
+button{cursor:pointer;font-weight:600}
+button:hover{background:var(--tinta);color:var(--branco)}
+button.ativo{background:var(--tinta);color:var(--branco)}
+input[type=search]{width:260px}
+
+/* ---------- a conta ao vivo ---------- */
+.conta{display:grid;grid-template-columns:auto auto auto auto auto;align-items:center;gap:14px;justify-content:center;overflow-x:auto;padding:8px 0 4px}
+.matriz{position:relative;padding:4px 12px;display:grid;gap:2px 14px}
+.matriz::before,.matriz::after{content:"";position:absolute;top:0;bottom:0;width:9px;border:2.5px solid var(--tinta)}
+.matriz::before{left:0;border-right:none}
+.matriz::after{right:0;border-left:none}
+.matriz span,.rotulos span{height:31px;line-height:27px;display:block}
+.matriz span{text-align:right;padding:2px 6px;border-radius:4px;font-size:1.05rem}
+.matriz span.lin{background:var(--mat-claro);font-weight:800}
+.matriz.por span.lin{background:var(--por-claro)}
+.rotulos{display:grid;gap:2px;padding:4px 0;font-size:.85rem;color:var(--suave)}
+.rotulos span{padding:2px 0}
+.rotulos span.lin{color:var(--tinta);font-weight:800}
+.sinal{font-size:1.6rem;font-weight:800}
+.dim{font-size:.8rem;color:var(--suave);text-align:center;margin-top:2px}
+.passos{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.passo{border-top:2px dashed var(--grade);padding-top:12px}
+.passo h3{margin:0 0 6px;font-size:1rem}
+.linha-conta{font-size:1.08rem;margin:2px 0}
+.linha-conta b{font-size:1.25rem}
+.manuscrito{font-family:var(--mao);font-size:1.15rem;color:var(--tinta2)}
+.selo{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem;margin-left:6px}
+.selo.ok{background:var(--ok-claro);color:var(--ok)}
+.selo.erro{background:var(--erro-claro);color:var(--erro)}
+.global{margin-top:16px;padding:12px 16px;background:var(--papel);border-radius:6px;font-size:1.05rem}
+
+/* ---------- indicadores ---------- */
+.indic{display:grid;grid-template-columns:1.3fr 1fr 1fr;border:1.5px solid var(--tinta);border-radius:6px;overflow:hidden}
+.indic div{padding:10px 14px;border-bottom:1px solid var(--grade)}
+.indic .cab{font-weight:800;background:var(--papel)}
+.indic .m{color:var(--mat);font-weight:800}
+.indic .p{color:var(--por);font-weight:800}
+.indic .grande{font-size:1.45rem}
+.indic .rot{color:var(--tinta2)}
+.resumo{margin-top:14px;display:flex;gap:20px;flex-wrap:wrap}
+.resumo p{margin:0}
+.veredito{font-family:var(--mao);font-size:1.3rem;margin-top:12px}
+
+/* ---------- gráficos ---------- */
+.graficos{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px}
+figure{margin:0}
+figcaption{font-weight:700;margin-bottom:6px}
+figcaption small{display:block;font-weight:400;color:var(--tinta2)}
+svg{width:100%;height:auto;display:block;font-family:var(--texto)}
+.legenda{display:flex;gap:16px;font-size:.88rem;margin-top:4px}
+.legenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* ---------- tabelas ---------- */
+.duas{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grade)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:700;color:var(--tinta2);border-bottom:1.5px solid var(--tinta)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--papel)}
+tr.sel{background:var(--mat-claro)!important}
+.rolagem{max-height:420px;overflow:auto;border:1.5px solid var(--tinta);border-radius:6px}
+.rolagem thead th{position:sticky;top:0;background:var(--branco)}
+.baixo{color:var(--erro);font-weight:700}
+footer{color:var(--tinta2);font-size:.9rem;text-align:center;margin-top:10px}
+@media (max-width:760px){.passos,.duas{grid-template-columns:1fr}.indic{font-size:.92rem}section{padding:18px 16px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="pagina">
+<header class="topo">
+  <div>
+    <h1>Desempenho acadêmico com matrizes</h1>
+    <p class="sub">Notas reais de <b id="m-total">382</b> estudantes em Matemática e Português (nomes fictícios). Mude os pesos, escolha um aluno e veja a Álgebra Linear calcular tudo na hora.</p>
+  </div>
+  <nav class="atalhos" aria-label="Seções">
+    <a href="#conta">A conta</a><a href="#indicadores">Indicadores</a><a href="#graficos">Gráficos</a><a href="#ranking">Ranking</a><a href="#matriz">Matriz N</a>
+  </nav>
+</header>
+
+<section id="pesos" aria-labelledby="t-pesos">
+  <h2 id="t-pesos">Parâmetros do estudo</h2>
+  <p class="explica">Os pesos são escolhas do estudo, não regras da escola. Eles são normalizados para somar 1, para que o resultado continue sendo uma média na escala 0–10.</p>
+  <div class="controles">
+    <div class="ctrl"><label for="w1">Peso do 1º período <output id="o1"></output></label><input type="range" id="w1" min="0" max="100" value="30"></div>
+    <div class="ctrl"><label for="w2">Peso do 2º período <output id="o2"></output></label><input type="range" id="w2" min="0" max="100" value="30"></div>
+    <div class="ctrl"><label for="w3">Peso do 3º período <output id="o3"></output></label><input type="range" id="w3" min="0" max="100" value="40"></div>
+    <div class="ctrl"><label for="pm">Peso de Mat no índice <output id="op"></output></label><input type="range" id="pm" min="0" max="100" value="50"></div>
+    <div class="ctrl"><label for="lim">Nota mínima para aprovação <output id="ol"></output></label><input type="range" id="lim" min="30" max="70" step="5" value="50"></div>
+    <div class="ctrl" style="grid-column:span 2"><div class="vetor" id="vetores"></div>
+      <div class="botoes" style="margin-top:8px"><button id="padrao" type="button">Voltar aos pesos do artigo</button></div></div>
+  </div>
+</section>
+
+<section id="conta" aria-labelledby="t-conta">
+  <h2 id="t-conta">A conta ao vivo: n = N · w</h2>
+  <p class="explica">A matriz de notas de uma disciplina (uma linha por aluno, uma coluna por período) multiplicada pelo vetor de pesos dá a nota ponderada de cada aluno. Aqui aparecem o aluno escolhido e os vizinhos dele na matriz (em ordem alfabética).</p>
+  <div class="botoes" style="margin-bottom:14px">
+    <label for="busca">Aluno</label>
+    <input type="search" id="busca" list="lista-ids" placeholder="Nome ou código" aria-label="Nome ou código do aluno">
+    <datalist id="lista-ids"></datalist>
+    <button type="button" id="anterior" aria-label="Aluno anterior">◀</button>
+    <button type="button" id="proximo" aria-label="Próximo aluno">▶</button>
+    <button type="button" id="sorteio">Sortear aluno</button>
+    <span style="width:12px"></span>
+    <button type="button" class="disc ativo" data-d="0">Matemática</button>
+    <button type="button" class="disc" data-d="1">Português</button>
+  </div>
+  <div class="conta" id="conta-matriz" aria-live="polite"></div>
+  <div class="passos" id="passos"></div>
+  <div class="global" id="global"></div>
+</section>
+
+<section id="indicadores" aria-labelledby="t-ind">
+  <h2 id="t-ind">Qual disciplina é mais difícil?</h2>
+  <p class="explica">Todos os indicadores saem de operações sobre F = N·W (382 × 2): média μ = Fᵀ1/m, desvio pela matriz de covariância e aprovação pela matriz indicadora I.</p>
+  <div class="indic" id="tabela-ind"></div>
+  <div class="resumo" id="resumo"></div>
+  <p class="veredito" id="veredito"></p>
+</section>
+
+<section id="graficos" aria-labelledby="t-graf">
+  <h2 id="t-graf">Gráficos</h2>
+  <p class="explica">Os gráficos de distribuição, dispersão e grupos mudam com os pesos. Clique em um ponto da dispersão para abrir a conta daquele aluno.</p>
+  <div class="graficos">
+    <figure><figcaption>Média da turma por período<small>Médias das colunas de N: μ = Nᵀ1/m</small></figcaption><div id="g-periodos"></div>
+      <div class="legenda"><span><i style="background:var(--mat)"></i>Matemática</span><span><i style="background:var(--por)"></i>Português</span><span><i style="background:none;border-top:2px dashed var(--erro);border-radius:0;height:0;width:16px;vertical-align:4px"></i>nota mínima</span></div></figure>
+    <figure><figcaption>Distribuição das notas ponderadas<small>Quantos alunos em cada faixa de nota</small></figcaption><div id="g-hist"></div>
+      <div class="legenda"><span><i style="background:var(--mat)"></i>Matemática</span><span><i style="background:var(--por)"></i>Português</span><span><i style="background:none;border-top:2px dashed var(--erro);border-radius:0;height:0;width:16px;vertical-align:4px"></i>nota mínima</span></div></figure>
+    <figure><figcaption>Matemática × Português<small id="g-disp-sub">Cada ponto é um aluno</small></figcaption><div id="g-disp"></div></figure>
+    <figure><figcaption>Médias por grupo<small>G = (EᵀE)⁻¹EᵀF</small></figcaption>
+      <div class="botoes" style="margin-bottom:6px"><select id="grupo" aria-label="Agrupar por">
+        <option value="failures">Reprovações anteriores</option><option value="studytime">Tempo de estudo semanal</option><option value="school">Escola</option></select></div>
+      <div id="g-grupos"></div>
+      <div class="legenda"><span><i style="background:var(--mat)"></i>Matemática</span><span><i style="background:var(--por)"></i>Português</span><span><i style="background:none;border-top:2px dashed var(--erro);border-radius:0;height:0;width:16px;vertical-align:4px"></i>nota mínima</span></div></figure>
+    <figure><figcaption>Matriz de correlação 6 × 6<small>R = D⁻¹ᐟ² C D⁻¹ᐟ², com C = Xcᵀ Xc / (m − 1)</small></figcaption><div id="g-corr"></div></figure>
+  </div>
+</section>
+
+<section id="ranking" aria-labelledby="t-rank">
+  <h2 id="t-rank">Ranking pelo índice global g = F · p</h2>
+  <p class="explica">Clique em um aluno para ver a conta dele.</p>
+  <div class="duas">
+    <div><h3>10 maiores índices</h3><table><thead><tr><th>Aluno</th><th>Mat</th><th>Por</th><th>g</th></tr></thead><tbody id="top"></tbody></table></div>
+    <div><h3>10 menores índices</h3><table><thead><tr><th>Aluno</th><th>Mat</th><th>Por</th><th>g</th></tr></thead><tbody id="fundo"></tbody></table></div>
+  </div>
+</section>
+
+<section id="matriz" aria-labelledby="t-mat">
+  <h2 id="t-mat">A matriz N completa (382 × 6)</h2>
+  <p class="explica">Notas na escala 0–10 (N = ½A), com os alunos em ordem alfabética. Reordenar as linhas equivale a multiplicar N por uma matriz de permutação, o que não altera nenhum resultado. Notas abaixo do mínimo aparecem em vermelho. As duas últimas colunas são F = N·W.</p>
+  <div class="rolagem"><table><thead><tr><th>Aluno</th><th>Mat P1</th><th>Mat P2</th><th>Mat P3</th><th>Por P1</th><th>Por P2</th><th>Por P3</th><th>F Mat</th><th>F Por</th></tr></thead><tbody id="tab-n"></tbody></table></div>
+</section>
+
+<footer>Dados: base Student Performance (Cortez e Silva, 2008; UCI Machine Learning Repository, CC BY 4.0). Os nomes dos alunos são fictícios (a base original é anônima) e servem só para a apresentação; cada aluno mantém seu código E001–E382. Painel gerado por <code>codigo/painel.py</code>, com os mesmos dados e fórmulas de <code>codigo/main.py</code>.</footer>
+</div>
+
+<script>
+const DADOS = __DADOS__;
+const N = DADOS.N, IDS = DADOS.ids, NOMES = DADOS.nomes, m = N.length;
+const nome = i => NOMES[i];
+const rotulo = i => `${NOMES[i]} (${IDS[i]})`;
+const PADRAO = {w:[30,30,40], pm:50, lim:50};
+const fmt = (x,c=2)=>x.toFixed(c).replace(".",",");
+const $ = s=>document.querySelector(s);
+
+/* ---------- Álgebra Linear (mesmas definições de algebra_matricial.py) ---------- */
+const transposta = A => A[0].map((_,j)=>A.map(l=>l[j]));
+const matVet = (A,v) => A.map(l=>l.reduce((s,a,j)=>s+a*v[j],0));
+const matMat = (A,B) => { const Bt=transposta(B); return A.map(l=>Bt.map(c=>l.reduce((s,a,j)=>s+a*c[j],0))); };
+const uns = k => Array(k).fill(1);
+const mediaColunas = A => matVet(transposta(A),uns(A.length)).map(x=>x/A.length);
+const blocoDiagonal = (w,b) => { const W=[]; for(let k=0;k<b;k++) w.forEach(x=>{const l=Array(b).fill(0); l[k]=x; W.push(l);}); return W; };
+function covariancia(A){ const mu=mediaColunas(A); const Xc=A.map(l=>l.map((a,j)=>a-mu[j]));
+  return matMat(transposta(Xc),Xc).map(l=>l.map(x=>x/(A.length-1))); }
+function correlacao(A){ const C=covariancia(A); return C.map((l,i)=>l.map((c,j)=>c/Math.sqrt(C[i][i]*C[j][j]))); }
+function mediasGrupo(rot, valores, A){ // G = (E^T E)^{-1} E^T A
+  const E = rot.map(v=>valores.map(c=>v===c?1:0));
+  const EtE = matMat(transposta(E),E), EtA = matMat(transposta(E),A);
+  return {G: EtA.map((l,k)=>l.map(x=>EtE[k][k]?x/EtE[k][k]:0)), n: valores.map((_,k)=>EtE[k][k])};
+}
+
+/* ---------- estado ---------- */
+let est = {aluno:0, disc:0};
+let calc = {};
+function lerParametros(){
+  const s=[+$("#w1").value,+$("#w2").value,+$("#w3").value];
+  const soma=s.reduce((a,b)=>a+b,0)||1;
+  const w=s.map(x=>x/soma);
+  const pm=+$("#pm").value/100;
+  return {w, p:[pm,1-pm], lim:+$("#lim").value/10, somaZero:s.every(x=>x===0)};
+}
+function recalcular(){
+  const P=lerParametros();
+  const W=blocoDiagonal(P.w,2);
+  const F=matMat(N,W);                 // F = N W   (382 x 2)
+  const g=matVet(F,P.p);               // g = F p
+  const I=F.map(l=>l.map(x=>x>=P.lim?1:0));
+  const C=covariancia(F);
+  calc={P,W,F,g,I,mu:mediaColunas(F),apr:mediaColunas(I),C,
+        r:C[0][1]/Math.sqrt(C[0][0]*C[1][1]),
+        ordem:[...g.keys()].sort((a,b)=>g[b]-g[a])};
+  calc.pos=Array(m); calc.ordem.forEach((i,k)=>calc.pos[i]=k+1);
+  desenharTudo();
+}
+
+/* ---------- parâmetros ---------- */
+function desenharParametros(){
+  const {w,p,lim}=calc.P;
+  $("#o1").textContent=fmt(w[0]); $("#o2").textContent=fmt(w[1]); $("#o3").textContent=fmt(w[2]);
+  $("#op").textContent=fmt(p[0]); $("#ol").textContent=fmt(lim,1);
+  $("#vetores").innerHTML=`w = (${w.map(x=>fmt(x)).join("; ")})ᵀ &nbsp; p = (${p.map(x=>fmt(x)).join("; ")})ᵀ`;
+}
+
+/* ---------- a conta ---------- */
+function desenharConta(){
+  const d=est.disc, i=est.aluno, {w,p,lim}=calc.P, F=calc.F;
+  const ini=Math.max(0,Math.min(m-5,i-2)), janela=[...Array(5).keys()].map(k=>ini+k);
+  const cols=d===0?[0,1,2]:[3,4,5], cls=d===0?"":"por";
+  const rot=janela.map(k=>`<span class="${k===i?"lin":""}">${nome(k)}</span>`).join("");
+  const celulas=janela.map(k=>cols.map(j=>`<span class="${k===i?"lin":""}">${fmt(N[k][j],1)}</span>`).join("")).join("");
+  const res=janela.map(k=>`<span class="${k===i?"lin":""}">${fmt(F[k][d])}</span>`).join("");
+  const wv=w.map(x=>`<span>${fmt(x)}</span>`).join("");
+  $("#conta-matriz").innerHTML=`
+    <div><div class="rotulos">${rot}</div><div class="dim">&nbsp;</div></div>
+    <div><div class="matriz ${cls}" style="grid-template-columns:repeat(3,auto)">${celulas}</div><div class="dim">N<sub>${d?"Por":"Mat"}</sub> (382 × 3)</div></div>
+    <div class="sinal">·</div>
+    <div><div class="matriz" style="grid-template-columns:auto">${wv}</div><div class="dim">w (3 × 1)</div></div>
+    <div style="display:flex;align-items:center;gap:14px"><span class="sinal">=</span>
+      <div><div class="matriz ${cls}" style="grid-template-columns:auto">${res}</div><div class="dim">n (382 × 1)</div></div></div>`;
+  const bloco=(dd,nomeD)=>{ const c=dd?[3,4,5]:[0,1,2]; const a=c.map(j=>N[i][j]); const t=a.map((x,k)=>x*w[k]); const r=t.reduce((s,x)=>s+x,0);
+    const ok=r>=lim;
+    return `<div class="passo"><h3>${nomeD} — ${nome(i)}</h3>
+      <p class="linha-conta">n = ${a.map((x,k)=>`${fmt(x,1)}·${fmt(w[k])}`).join(" + ")}</p>
+      <p class="linha-conta">&nbsp;&nbsp;= ${t.map(x=>fmt(x,3)).join(" + ")}</p>
+      <p class="linha-conta">&nbsp;&nbsp;= <b>${fmt(r)}</b> <span class="selo ${ok?"ok":"erro"}">${ok?"aprovado":"reprovado"}</span></p>
+      ${a.some(x=>x===0)?`<p class="nota">Nota zero em um período: provavelmente faltou à avaliação, mas a conta trata como nota real.</p>`:""}</div>`; };
+  $("#passos").innerHTML=bloco(0,"Matemática")+bloco(1,"Português");
+  const g=calc.g[i];
+  $("#global").innerHTML=`Índice global: g = ${fmt(F[i][0])}·${fmt(p[0])} + ${fmt(F[i][1])}·${fmt(p[1])} = <b>${fmt(g)}</b>
+    <span class="manuscrito">&nbsp;→ ${nome(i)} ficou em ${calc.pos[i]}º lugar de ${m} (código ${IDS[i]}, escola ${DADOS.escola[i]})</span>`;
+  $("#busca").value=rotulo(i);
+  document.querySelectorAll("tr[data-i]").forEach(tr=>tr.classList.toggle("sel",+tr.dataset.i===i));
+}
+
+/* ---------- indicadores ---------- */
+function desenharIndicadores(){
+  const {mu,apr,C,I,F}=calc, dp=[Math.sqrt(C[0][0]),Math.sqrt(C[1][1])];
+  const rep=apr.map(a=>Math.round((1-a)*m));
+  const ambos=I.filter(l=>l[0]&&l[1]).length, nenhum=I.filter(l=>!l[0]&&!l[1]).length;
+  const linhas=[["Média ponderada",fmt(mu[0]),fmt(mu[1]),true],["Taxa de aprovação",fmt(100*apr[0],1)+"%",fmt(100*apr[1],1)+"%",true],
+    ["Alunos reprovados",rep[0],rep[1]],["Desvio-padrão",fmt(dp[0]),fmt(dp[1])]];
+  $("#tabela-ind").innerHTML=`<div class="cab">Indicador</div><div class="cab m">Matemática</div><div class="cab p">Português</div>`+
+    linhas.map(([r,a,b,g])=>`<div class="rot">${r}</div><div class="m ${g?"grande":""}">${a}</div><div class="p ${g?"grande":""}">${b}</div>`).join("");
+  $("#resumo").innerHTML=`<p>Aprovados nas duas: <b>${ambos}</b></p><p>Reprovados nas duas: <b>${nenhum}</b></p><p>Correlação Mat × Por: <b>r = ${fmt(calc.r,3)}</b></p>`;
+  const dif=mu[1]-mu[0];
+  $("#veredito").textContent= dif>0 ? `Matemática é a mais difícil: média ${fmt(dif)} ponto menor e ${fmt(100*(apr[1]-apr[0]),1)} pontos percentuais a menos de aprovação.`
+    : `Com estes pesos, Português ficou com média menor.`;
+}
+
+/* ---------- gráficos (SVG) ---------- */
+const COR=["var(--mat)","var(--por)"];
+function eixoY(svg,x0,x1,y,ymin,ymax,passos,alt){ let s=""; for(let k=0;k<=passos;k++){const v=ymin+(ymax-ymin)*k/passos, yy=y(v);
+  s+=`<line x1="${x0}" x2="${x1}" y1="${yy}" y2="${yy}" stroke="var(--grade)"/><text x="${x0-6}" y="${yy+4}" text-anchor="end" font-size="11" fill="var(--tinta2)">${fmt(v,alt??0)}</text>`;} return s; }
+function linhaLimite(x0,x1,y){ const yy=y(calc.P.lim); return `<line x1="${x0}" x2="${x1}" y1="${yy}" y2="${yy}" stroke="var(--erro)" stroke-dasharray="5 4" stroke-width="1.5"/>`; }
+
+function grafPeriodos(){
+  const mu=mediaColunas(N), W=420,H=250,L=40,R=40,T=16,B=34;
+  const x=k=>L+(W-L-R)*(k/2), y=v=>T+(H-T-B)*(1-(v-3)/(8-3));
+  let s=eixoY(null,L,W-R,y,3,8,5)+linhaLimite(L,W-R,y);
+  [[0,1,2],[3,4,5]].forEach((c,d)=>{ const pts=c.map((j,k)=>[x(k),y(mu[j])]);
+    s+=`<polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="${COR[d]}" stroke-width="2.5"/>`;
+    pts.forEach((p,k)=>s+=`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="${COR[d]}" stroke="#fff" stroke-width="2"><title>${d?"Português":"Matemática"} P${k+1}: ${fmt(mu[c[k]])}</title></circle><text x="${p[0]}" y="${p[1]-10}" text-anchor="middle" font-size="11" fill="var(--tinta)">${fmt(mu[c[k]])}</text>`);});
+  ["1º período","2º período","3º período"].forEach((t,k)=>s+=`<text x="${x(k)}" y="${H-10}" text-anchor="middle" font-size="12" fill="var(--tinta2)">${t}</text>`);
+  $("#g-periodos").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Médias por período">${s}</svg>`;
+}
+function grafHist(){
+  const F=calc.F, W=420,H=250,L=36,R=10,T=12,B=30, nb=20;
+  const cont=[0,1].map(d=>{const c=Array(nb).fill(0); F.forEach(l=>c[Math.min(nb-1,Math.floor(l[d]/0.5))]++); return c;});
+  const ymax=Math.ceil(Math.max(...cont.flat())/20)*20||20;
+  const x=v=>L+(W-L-R)*v/10, y=v=>T+(H-T-B)*(1-v/ymax), bw=(W-L-R)/nb;
+  let s=eixoY(null,L,W-R,y,0,ymax,4);
+  const xl=x(calc.P.lim); s+=`<line x1="${xl}" x2="${xl}" y1="${T}" y2="${H-B}" stroke="var(--erro)" stroke-dasharray="5 4" stroke-width="1.5"/>`;
+  cont.forEach((c,d)=>c.forEach((v,k)=>{ if(!v) return; const x0=L+k*bw+1+d*(bw-2)/2, hgt=(H-T-B)*v/ymax;
+    s+=`<rect x="${x0}" y="${y(v)}" width="${(bw-2)/2-1}" height="${hgt}" rx="2" fill="${COR[d]}"><title>${d?"Português":"Matemática"} ${fmt(k*0.5,1)}–${fmt(k*0.5+0.5,1)}: ${v} alunos</title></rect>`;}));
+  for(let v=0;v<=10;v+=2) s+=`<text x="${x(v)}" y="${H-12}" text-anchor="middle" font-size="11" fill="var(--tinta2)">${v}</text>`;
+  $("#g-hist").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histograma das notas ponderadas">${s}</svg>`;
+}
+function grafDisp(){
+  const F=calc.F, W=420,H=330,L=36,R=12,T=12,B=36;
+  const x=v=>L+(W-L-R)*v/10, y=v=>T+(H-T-B)*(1-v/10);
+  let s=eixoY(null,L,W-R,y,0,10,5);
+  const xl=x(calc.P.lim), yl=y(calc.P.lim);
+  s+=`<line x1="${xl}" x2="${xl}" y1="${T}" y2="${H-B}" stroke="var(--erro)" stroke-dasharray="5 4"/><line x1="${L}" x2="${W-R}" y1="${yl}" y2="${yl}" stroke="var(--erro)" stroke-dasharray="5 4"/>`;
+  F.forEach((l,i)=>{ if(i===est.aluno) return; s+=`<circle class="pt" data-i="${i}" cx="${x(l[0])}" cy="${y(l[1])}" r="4.5" fill="var(--mat)" fill-opacity=".45" stroke="#fff" stroke-width="1" style="cursor:pointer"><title>${nome(i)}: Mat ${fmt(l[0])}, Por ${fmt(l[1])}</title></circle>`;});
+  const a=F[est.aluno]; s+=`<circle cx="${x(a[0])}" cy="${y(a[1])}" r="8" fill="var(--erro)" stroke="#fff" stroke-width="2.5"><title>${nome(est.aluno)}</title></circle><text x="${x(a[0])>W*0.7?x(a[0])-11:x(a[0])+11}" y="${y(a[1])-8}" text-anchor="${x(a[0])>W*0.7?"end":"start"}" font-size="12" font-weight="700" fill="var(--tinta)">${nome(est.aluno)}</text>`;
+  for(let v=0;v<=10;v+=2) s+=`<text x="${x(v)}" y="${H-18}" text-anchor="middle" font-size="11" fill="var(--tinta2)">${v}</text>`;
+  s+=`<text x="${(L+W-R)/2}" y="${H-2}" text-anchor="middle" font-size="12" fill="var(--tinta2)">Nota ponderada em Matemática →</text>`;
+  $("#g-disp").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dispersão Matemática por Português">${s}</svg>`;
+  $("#g-disp-sub").textContent=`Cada ponto é um aluno (vertical: Português). Correlação r = ${fmt(calc.r,2)}`;
+  document.querySelectorAll("#g-disp .pt").forEach(c=>c.addEventListener("click",()=>escolher(+c.dataset.i)));
+}
+const GRUPOS={failures:{valores:[0,1,2,3],nomes:["0","1","2","3 ou mais"]},studytime:{valores:[1,2,3,4],nomes:["< 2 h","2–5 h","5–10 h","> 10 h"]},school:{valores:["GP","MS"],nomes:["Gabriel Pereira","Mousinho da Silveira"]}};
+function grafGrupos(){
+  const v=$("#grupo").value, gr=GRUPOS[v], rot=DADOS[v].map(x=>v==="failures"?Math.min(x,3):x);
+  const {G,n}=mediasGrupo(rot,gr.valores,calc.F);
+  const W=420,H=250,L=36,R=10,T=14,B=44, k=gr.valores.length, larg=(W-L-R)/k, y=val=>T+(H-T-B)*(1-val/8);
+  let s=eixoY(null,L,W-R,y,0,8,4)+linhaLimite(L,W-R,y);
+  G.forEach((l,g)=>{ l.forEach((val,d)=>{ const bx=L+g*larg+larg*0.15+d*larg*0.35;
+    s+=`<rect x="${bx}" y="${y(val)}" width="${larg*0.33}" height="${(H-T-B)*val/8}" rx="3" fill="${COR[d]}"><title>${gr.nomes[g]} — ${d?"Português":"Matemática"}: ${fmt(val)}</title></rect><text x="${bx+larg*0.165}" y="${y(val)-4}" text-anchor="middle" font-size="10.5" fill="var(--tinta)">${fmt(val)}</text>`;});
+    s+=`<text x="${L+g*larg+larg/2}" y="${H-24}" text-anchor="middle" font-size="11.5" fill="var(--tinta)">${gr.nomes[g]}</text><text x="${L+g*larg+larg/2}" y="${H-9}" text-anchor="middle" font-size="10.5" fill="var(--tinta2)">n = ${n[g]}</text>`;});
+  $("#g-grupos").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Médias por grupo">${s}</svg>`;
+}
+function grafCorr(){
+  const R=correlacao(N), nomes=["Mat P1","Mat P2","Mat P3","Por P1","Por P2","Por P3"], c=46, L=58, T=8;
+  const cor=v=>{ const t=Math.max(0,Math.min(1,(v-0.4)/0.6)); const a=[226,236,248], b=[22,66,140]; return `rgb(${a.map((x,k)=>Math.round(x+(b[k]-x)*t)).join(",")})`; };
+  let s="";
+  R.forEach((l,i)=>{ s+=`<text x="${L-6}" y="${T+i*c+c/2+4}" text-anchor="end" font-size="11" fill="var(--tinta2)">${nomes[i]}</text>`;
+    l.forEach((v,j)=>s+=`<rect x="${L+j*c}" y="${T+i*c}" width="${c-2}" height="${c-2}" rx="3" fill="${cor(v)}"><title>${nomes[i]} × ${nomes[j]}: ${fmt(v)}</title></rect><text x="${L+j*c+c/2-1}" y="${T+i*c+c/2+4}" text-anchor="middle" font-size="11" fill="${v>0.72?"#fff":"var(--tinta)"}">${fmt(v)}</text>`);});
+  nomes.forEach((t,j)=>s+=`<text x="${L+j*c+c/2}" y="${T+6*c+14}" text-anchor="middle" font-size="10.5" fill="var(--tinta2)">${t}</text>`);
+  $("#g-corr").innerHTML=`<svg viewBox="0 0 ${L+6*c+6} ${T+6*c+22}" role="img" aria-label="Matriz de correlação" style="max-width:380px">${s}</svg>`;
+}
+
+/* ---------- tabelas ---------- */
+function linhaRank(i){ const F=calc.F; return `<tr data-i="${i}" tabindex="0"><td>${calc.pos[i]}º ${nome(i)}</td><td>${fmt(F[i][0])}</td><td>${fmt(F[i][1])}</td><td><b>${fmt(calc.g[i])}</b></td></tr>`; }
+function desenharTabelas(){
+  $("#top").innerHTML=calc.ordem.slice(0,10).map(linhaRank).join("");
+  $("#fundo").innerHTML=calc.ordem.slice(-10).map(linhaRank).join("");
+  const lim=calc.P.lim;
+  $("#tab-n").innerHTML=N.map((l,i)=>`<tr data-i="${i}" tabindex="0"><td>${nome(i)} <span style="color:var(--suave)">${IDS[i]}</span></td>${l.map(x=>`<td class="${x<lim?"baixo":""}">${fmt(x,1)}</td>`).join("")}<td><b>${fmt(calc.F[i][0])}</b></td><td><b>${fmt(calc.F[i][1])}</b></td></tr>`).join("");
+  document.querySelectorAll("tr[data-i]").forEach(tr=>{ const ir=()=>{escolher(+tr.dataset.i); $("#conta").scrollIntoView();};
+    tr.addEventListener("click",ir); tr.addEventListener("keydown",e=>{if(e.key==="Enter")ir();}); });
+}
+
+/* ---------- orquestração ---------- */
+function desenharTudo(){ desenharParametros(); desenharIndicadores(); grafPeriodos(); grafHist(); grafGrupos(); grafCorr(); desenharTabelas(); desenharConta(); grafDisp(); }
+function escolher(i){ est.aluno=Math.max(0,Math.min(m-1,i)); desenharConta(); grafDisp(); }
+
+$("#m-total").textContent=m;
+$("#lista-ids").innerHTML=IDS.map((x,i)=>`<option value="${rotulo(i)}">`).join("");
+["#w1","#w2","#w3","#pm","#lim"].forEach(s=>$(s).addEventListener("input",recalcular));
+$("#padrao").addEventListener("click",()=>{ $("#w1").value=PADRAO.w[0]; $("#w2").value=PADRAO.w[1]; $("#w3").value=PADRAO.w[2]; $("#pm").value=PADRAO.pm; $("#lim").value=PADRAO.lim; recalcular(); });
+$("#busca").addEventListener("change",e=>{ const t=e.target.value.trim().toLowerCase(); if(!t) return;
+  let k=IDS.findIndex((x,i)=>rotulo(i).toLowerCase()===t||x.toLowerCase()===t);
+  if(k<0) k=NOMES.findIndex(n=>n.toLowerCase().includes(t));
+  if(k>=0) escolher(k); });
+$("#anterior").addEventListener("click",()=>escolher(est.aluno-1));
+$("#proximo").addEventListener("click",()=>escolher(est.aluno+1));
+$("#sorteio").addEventListener("click",()=>escolher(Math.floor(Math.random()*m)));
+document.querySelectorAll(".disc").forEach(b=>b.addEventListener("click",()=>{ est.disc=+b.dataset.d; document.querySelectorAll(".disc").forEach(x=>x.classList.toggle("ativo",x===b)); desenharConta(); }));
+$("#grupo").addEventListener("change",grafGrupos);
+recalcular();
+</script>
+</body>
+</html>

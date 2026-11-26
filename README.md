@@ -2,7 +2,7 @@
 
 **Uma aplicação da Álgebra Linear** — Projeto da disciplina Álgebra Linear e Geometria Analítica
 
-**Integrantes:** Edinardo Galvão Morais · Luís Miguel Nogueira · Ícaro Riquelme da Silva Freitas
+**Integrantes:** Edinardo Galvão Morais · Luís Miguel Nogueira · Ícaro Riquelme da Silva Freitas · Marcus Vinícius Silva Oliveira
 ## O problema
 
 Como operações matriciais podem auxiliar na análise do desempenho acadêmico, permitindo
